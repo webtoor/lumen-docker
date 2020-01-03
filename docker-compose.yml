@@ -1,0 +1,75 @@
+version : '3'
+networks:
+    ludoc:
+
+services:
+    #Web Server
+    nginx:
+        image: nginx:stable-alpine
+        container_name: nginx
+        ports:
+            - "8080:80"
+        volumes:
+            - ./nginx:/var/www/
+            - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php
+            - mysql
+        networks:
+            - ludoc
+
+    #PHP
+    php:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: php
+        volumes:
+            - ./src:/var/www
+        ports:
+            - "9000:9000"
+        environment:
+            APP_ENV: local
+            APP_DEBUG: 'true'
+            APP_KEY: base64:RbkyYRmHKy62xfP2h1MLG8Bj/Zzifilm9SACl0+bjQU=
+            APP_LOCALE: en
+            APP_FALLBACK_LOCALE: en
+            DB_CONNECTION: mysql
+            DB_HOST: mysql
+            DB_DATABASE: homestead
+            DB_USERNAME: homestead
+            DB_PASSWORD: secret
+        networks:
+            - ludoc
+
+    #MYSQL DATABASE
+    mysql:
+        image: mysql:5.7.22
+        container_name: mysql
+        restart: always
+        tty: true
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: homestead
+            MYSQL_USER: homestead
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: secret
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        volumes:
+            - ./mysql_db:/var/lib/mysql
+        networks:
+            - ludoc
+
+    # PHPMYADMIN        
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: phpmyadmin
+        ports:
+            - "9092:80"
+        environment:
+            PMA_HOST: mysql
+        networks:
+            - ludoc
+       
